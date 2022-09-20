@@ -82,4 +82,10 @@ public class ExceptionAdvice {
     public Response lineNotFoundException(){
         return Response.failure(404, "해당 호선을 찾을 수 없습니다. ");
     }
+
+    @ExceptionHandler(StationNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response stationNotFoundException(){
+        return Response.failure(404, "요청하신 역을 찾을 수 없습니다. ");
+    }
 }
