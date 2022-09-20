@@ -18,9 +18,4 @@ public class DoTheMeetingNowApplication {
     public static void main(String[] args) throws IOException {
         SpringApplication.run(DoTheMeetingNowApplication.class, args);
     }
-
-    @Bean
-    public BCryptPasswordEncoder encoder(){
-        return new BCryptPasswordEncoder();
-    }
 }

@@ -22,8 +22,4 @@ public class Category {
 
     @Column(name = "CATEGORY_NAME")
     private String name;
-
-    @JoinColumn(name = "REVIEW_ID")
-    @OneToMany(mappedBy = "category")
-    private List<Review> reviews = new LinkedList<Review>();
 }
