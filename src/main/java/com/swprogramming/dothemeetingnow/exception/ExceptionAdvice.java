@@ -23,6 +23,12 @@ public class ExceptionAdvice {
         return Response.failure(400, e.getBindingResult().getFieldError().getDefaultMessage());
     }
 
+    @ExceptionHandler(MemberNotAuthorized.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response memberNotAuthorizedException() {
+        return Response.failure(404, "권한이 없습니다 ");
+    }
+
     @ExceptionHandler(MemberNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Response memberNotFoundException() {
@@ -63,5 +69,11 @@ public class ExceptionAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Response loginFailException(){
         return Response.failure(404, "로그인에 실패했습니다. ");
+    }
+
+    @ExceptionHandler(ReviewNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response reviewNotFoundException(){
+        return Response.failure(404, "리뷰를 찾을 수 없습니다. ");
     }
 }
