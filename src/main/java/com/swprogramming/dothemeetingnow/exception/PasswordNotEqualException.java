@@ -1,4 +1,4 @@
 package com.swprogramming.dothemeetingnow.exception;
 
-public class PasswordNotEqualException extends Exception{
+public class PasswordNotEqualException extends RuntimeException{
 }

@@ -1,4 +1,4 @@
 package com.swprogramming.dothemeetingnow.exception;
 
-public class PhoneAlreadyExistException  extends Exception{
+public class PhoneAlreadyExistException  extends RuntimeException{
 }

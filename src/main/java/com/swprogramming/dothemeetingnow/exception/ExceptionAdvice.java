@@ -76,4 +76,10 @@ public class ExceptionAdvice {
     public Response reviewNotFoundException(){
         return Response.failure(404, "리뷰를 찾을 수 없습니다. ");
     }
+
+    @ExceptionHandler(LineNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response lineNotFoundException(){
+        return Response.failure(404, "해당 호선을 찾을 수 없습니다. ");
+    }
 }
