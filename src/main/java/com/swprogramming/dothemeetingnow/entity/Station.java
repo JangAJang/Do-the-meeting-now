@@ -1,6 +1,7 @@
 package com.swprogramming.dothemeetingnow.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import javax.persistence.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name = "STATION")
 public class Station {
 
@@ -18,8 +20,9 @@ public class Station {
     @Column(name = "STATION_ID")
     private Long id;
 
-    @Column(name = "STATION_LINE", nullable = false)
-    private String line;
+    @JoinColumn(name = "LINE_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Line line;
 
     @Column(name = "STATION_NAME", nullable = false)
     private String name;
