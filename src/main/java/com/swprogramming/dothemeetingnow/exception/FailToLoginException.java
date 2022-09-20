@@ -1,4 +1,4 @@
 package com.swprogramming.dothemeetingnow.exception;
 
-public class FailToLoginException extends Exception{
+public class FailToLoginException extends RuntimeException{
 }

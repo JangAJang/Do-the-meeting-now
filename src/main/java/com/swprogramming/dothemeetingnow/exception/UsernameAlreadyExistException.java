@@ -1,4 +1,4 @@
 package com.swprogramming.dothemeetingnow.exception;
 
-public class UsernameAlreadyExistException extends Exception{
+public class UsernameAlreadyExistException extends RuntimeException{
 }
