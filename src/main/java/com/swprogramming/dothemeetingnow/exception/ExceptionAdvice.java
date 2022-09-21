@@ -88,4 +88,10 @@ public class ExceptionAdvice {
     public Response stationNotFoundException(){
         return Response.failure(404, "요청하신 역을 찾을 수 없습니다. ");
     }
+
+    @ExceptionHandler(RouteNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response routeNotFoundException(){
+        return Response.failure(404, "해당 노선을 찾을 수 없습니다. ");
+    }
 }
