@@ -29,4 +29,5 @@ public class Station {
 
     @Column(name = "STATION_NAME", nullable = false)
     private String name;
+
 }

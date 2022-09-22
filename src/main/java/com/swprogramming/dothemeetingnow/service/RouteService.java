@@ -14,8 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -33,12 +32,23 @@ public class RouteService {
         return RouteResponseDto.toDto(route);
     }
 
-    //구현 로직 만들어야 함
     @Transactional(readOnly = true)
     public List<RouteResponseDto> getAllRouteOfLine(Long line_id){
         Line line = lineRepository.findById(line_id).orElseThrow(LineNotFoundException::new);
+        List<RouteResponseDto> routeResponseDtos = new LinkedList<>();
         List<Route> routes = routeRepository.findAllByLine(line);
         if(routes.isEmpty()) throw new RouteNotFoundException();
+        routeResponseDtos.add(RouteResponseDto.toDto(routes.get(0)));
+        routes.remove(routes.get(0));
+        while(!routes.isEmpty()){
+            for(Route route : routes){
+                if(route.getStart().equals(routeResponseDtos.get(routeResponseDtos.size()-1))){
+                    routeResponseDtos.add(RouteResponseDto.toDto(route));
+                    routes.remove(route);
+                }
+            }
+        }
+        return routeResponseDtos;
     }
 
     @Transactional(readOnly = true)

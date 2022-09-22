@@ -18,10 +18,6 @@ public class Route {
     @Column(name = "ROUTE_ID")
     private Long id;
 
-    @JoinColumn(name = "LINE_ID")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Line line;
-
     @Column(name = "ROUTE_TIME")
     private Long time;
 

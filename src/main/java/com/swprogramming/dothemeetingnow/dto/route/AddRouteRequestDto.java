@@ -12,9 +12,6 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class AddRouteRequestDto {
 
-    @NotNull(message = "지하철 호선을 입력하세요")
-    private String line_name;
-
     @NotNull(message = "출발 역을 입력하세요")
     private String start;
 
