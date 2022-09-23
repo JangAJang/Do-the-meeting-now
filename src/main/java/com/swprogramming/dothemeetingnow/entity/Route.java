@@ -25,13 +25,13 @@ public class Route {
     @ManyToOne(fetch = FetchType.LAZY)
     private Station start;
 
-    @JoinColumn(name = "ROUTE_END")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Station end;
-
     @JoinColumn(name = "LINE_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private Line line;
+
+    @JoinColumn(name = "ROUTE_END")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Station end;
 
     @Column(name = "ROUTE_STATUS")
     private RouteStatus routeStatus;

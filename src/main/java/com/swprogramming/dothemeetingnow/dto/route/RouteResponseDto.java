@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
+
 
 @Data
 @AllArgsConstructor
@@ -14,9 +14,11 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class RouteResponseDto {
 
-    private String line_name;
+    private String line_start;
 
     private String start;
+
+    private String line_end;
 
     private String end;
 
@@ -26,9 +28,10 @@ public class RouteResponseDto {
 
     public static RouteResponseDto toDto(Route route){
         RouteResponseDto routeResponseDto= RouteResponseDto.builder()
-                .line_name(route.getLine().getName())
+                .line_start(route.getStart().getLine().getName())
                 .start(route.getStart().getName())
                 .end(route.getEnd().getName())
+                .line_end(route.getEnd().getLine().getName())
                 .min(route.getTime()/60)
                 .second(route.getTime()%60)
                 .build();
