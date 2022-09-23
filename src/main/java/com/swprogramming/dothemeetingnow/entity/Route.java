@@ -1,6 +1,7 @@
 package com.swprogramming.dothemeetingnow.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "ROUTE")
+@Builder
 public class Route {
 
     @Id

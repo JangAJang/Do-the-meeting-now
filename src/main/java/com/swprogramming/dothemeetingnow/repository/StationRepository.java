@@ -13,4 +13,8 @@ public interface StationRepository extends JpaRepository<Station, Long> {
     List<Station> findAllByLine(Line line);
 
     Optional<Station> findByNameAndLine(String name, Line line);
+
+    List<Station> findAllByName(String name);
+
+
 }

@@ -1,9 +1,7 @@
 package com.swprogramming.dothemeetingnow.service;
 
 import com.swprogramming.dothemeetingnow.Graph;
-import com.swprogramming.dothemeetingnow.dto.route.AddRouteRequestDto;
-import com.swprogramming.dothemeetingnow.dto.route.RouteResponseDto;
-import com.swprogramming.dothemeetingnow.dto.route.SearchRouteRequestDto;
+import com.swprogramming.dothemeetingnow.dto.route.*;
 import com.swprogramming.dothemeetingnow.entity.*;
 import com.swprogramming.dothemeetingnow.exception.*;
 import com.swprogramming.dothemeetingnow.repository.*;
@@ -48,8 +46,6 @@ public class RouteService {
         return "삭제 완료";
     }
 
-
-
     @Transactional(readOnly = true)
     public RouteResponseDto getRouteInfo(Long id){
         Route route = getRoute(id);
@@ -57,11 +53,23 @@ public class RouteService {
     }
 
     @Transactional(readOnly = true)
-    public RouteResponseDto getShortestRouteInSameLine(SearchRouteRequestDto searchRouteRequestDto){
-        Line line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
-        Station start = stationRepository.findByNameAndLine(searchRouteRequestDto.getStart_station(), line).orElseThrow(StationNotFoundException::new);
-        Station end = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), line).orElseThrow(StationNotFoundException::new);
-        if(start.equals(end)) throw new StationSameException();
+    public RouteResponseDto getShortestRoute(SearchRouteRequestDto searchRouteRequestDto){
+        Line from_line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
+        Line to_line = lineRepository.findByName(searchRouteRequestDto.getEnd_line()).orElseThrow(LineNotFoundException::new);
+        Station start = stationRepository.findByNameAndLine(searchRouteRequestDto.getStart_station(), from_line).orElseThrow(StationNotFoundException::new);
+        Station end = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), to_line).orElseThrow(StationNotFoundException::new);
+        Route route;
+        if(from_line.equals(to_line)){
+            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInSameLine(searchRouteRequestDto, start, end));
+        }
+        else {
+            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInDifferentLine(searchRouteRequestDto, start, end));
+        }
+        return RouteResponseDto.toDto(route);
+    }
+
+    private Route getShortestRouteInSameLine(SearchRouteRequestDto searchRouteRequestDto, Station start, Station end){
+        Line line = start.getLine();
         List<Route> routes = routeRepository.findAllByLine(line);
         if(routes.isEmpty()) throw new RouteEmptyException();
         List<Station> stations = stationRepository.findAllByLine(line);
@@ -74,24 +82,19 @@ public class RouteService {
         }
         Long[] distance = graph.dijkstra(stations.indexOf(start));
         Long time = distance[stations.indexOf(end)];
-        RouteResponseDto routeResponseDto = RouteResponseDto.builder()
-                .line_start(line.getName())
-                .line_end(line.getName())
-                .start(start.getName())
-                .end(end.getName())
-                .min(time/60)
-                .second(time%60)
-                .build();
-        return routeResponseDto;
+        Route route = new Route();
+        route.setLine(line);
+        route.setStart(start);
+        route.setEnd(end);
+        route.setTime(time);
+        route.setRouteStatus(RouteStatus.DIRECT);
+        routeRepository.save(route);
+        return route;
     }
 
-    //수정필요
-    @Transactional(readOnly = true)
-    public RouteResponseDto getShortestRouteInDifferentLine(SearchRouteRequestDto searchRouteRequestDto){
-        Line from_line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
-        Line to_line = lineRepository.findByName(searchRouteRequestDto.getEnd_line()).orElseThrow(LineNotFoundException::new);
-        Station from = stationRepository.findByNameAndLine(searchRouteRequestDto.getStart_station(), from_line).orElseThrow(StationNotFoundException::new);
-        Station to = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), to_line).orElseThrow(StationNotFoundException::new);
+    private Route getShortestRouteInDifferentLine(SearchRouteRequestDto searchRouteRequestDto, Station from, Station to){
+        Line from_line = from.getLine();
+        Line to_line = to.getLine();
         List<Route> routes = routeRepository.findAll();
         if(routes.isEmpty()) throw new RouteEmptyException();
         List<Station> stations = stationRepository.findAll();
@@ -104,15 +107,14 @@ public class RouteService {
         }
         Long[] distance = graph.dijkstra(stations.indexOf(from));
         Long time = distance[stations.indexOf(to)];
-        RouteResponseDto routeResponseDto = RouteResponseDto.builder()
-                .line_start(from.getLine().getName())
-                .line_end(to.getLine().getName())
-                .start(from.getName())
-                .end(to.getName())
-                .min(time/60)
-                .second(time%60)
-                .build();
-        return routeResponseDto;
+        Route route = new Route();
+        route.setStart(from);
+        route.setEnd(to);
+        route.setTime(time);
+        route.setLine(null);
+        route.setRouteStatus(RouteStatus.TRANSFER);
+        routeRepository.save(route);
+        return route;
     }
 
     private Route getRoute(Long id){
