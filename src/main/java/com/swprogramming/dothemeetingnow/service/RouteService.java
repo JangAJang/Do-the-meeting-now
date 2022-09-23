@@ -104,15 +104,15 @@ public class RouteService {
         Station end = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), to_line).orElseThrow(StationNotFoundException::new);
         Route route;
         if(from_line.equals(to_line)){
-            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInSameLine(searchRouteRequestDto, start, end));
+            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInSameLine(start, end));
         }
         else {
-            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInDifferentLine(searchRouteRequestDto, start, end));
+            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInDifferentLine(start, end));
         }
         return RouteResponseDto.toDto(route);
     }
 
-    private Route getShortestRouteInSameLine(SearchRouteRequestDto searchRouteRequestDto, Station start, Station end){
+    private Route getShortestRouteInSameLine(Station start, Station end){
         Line line = start.getLine();
         List<Route> routes = routeRepository.findAllByLine(line);
         if(routes.isEmpty()) throw new RouteEmptyException();
@@ -136,7 +136,7 @@ public class RouteService {
         return route;
     }
 
-    private Route getShortestRouteInDifferentLine(SearchRouteRequestDto searchRouteRequestDto, Station from, Station to){
+    private Route getShortestRouteInDifferentLine(Station from, Station to){
         Line from_line = from.getLine();
         Line to_line = to.getLine();
         List<Route> routes = routeRepository.findAll();
@@ -159,6 +159,53 @@ public class RouteService {
         route.setRouteStatus(RouteStatus.TRANSFER);
         routeRepository.save(route);
         return route;
+    }
+
+    public List<RouteResponseDto> searchMiddleRoute(SearchMiddleRequestListDto searchMiddleRequestListDto){
+        List<SearchMiddleRequestDto> list = searchMiddleRequestListDto.getSearchMiddleRequestDtoList();
+        List<Station> starts = new LinkedList<>();
+        for(SearchMiddleRequestDto searchMiddleRequestDto: list){
+            Line line = lineRepository.findByName(searchMiddleRequestDto.getLine_name()).orElseThrow(LineNotFoundException::new);
+            starts.add(stationRepository.findByNameAndLine(searchMiddleRequestDto.getStation_name(), line).orElseThrow(StationNotFoundException::new));
+        }
+        List<Route> routes = routeRepository.findAll();
+        List<Station> stations = stationRepository.findAll();
+        Graph graph = new Graph(stations.size());
+        for(int i=0; i<routes.size(); i++){
+            int a = stations.indexOf(routes.get(i).getStart());
+            int b = stations.indexOf(routes.get(i).getEnd());
+            Long weight = routes.get(i).getTime();
+            graph.input(a, b, weight);
+        }
+        Long[][] distances = new Long[starts.size()][stations.size()];
+        for(int i=0; i<starts.size(); i++){
+            distances[i] = graph.dijkstra(i);
+        }
+        int index = 0;
+        Long min = Long.MAX_VALUE;
+        for(int i=0; i<stations.size(); i++){
+            Long average = 0L;
+            for(int j=0; j<starts.size(); j++){
+                average = distances[j][i];
+            }
+            average = average / starts.size();
+            Long[] minus = new Long[starts.size()];
+            Long variance = 0L;
+            for(int j=0; j<starts.size(); j++){
+                minus[j] = (distances[j][i] - average) * (distances[j][i] - average);
+                variance += minus[j];
+            }
+            variance = variance / starts.size();
+            if(min > variance){
+                index = i;
+                min = variance;
+            }
+        }
+        List<RouteResponseDto> result = new LinkedList<>();
+        for(int i=0; i<starts.size(); i++){
+            result.add(RouteResponseDto.toDto(getShortestRouteInDifferentLine(starts.get(i), stations.get(index))));
+        }
+        return result;
     }
 
     private Route getRoute(Long id){
