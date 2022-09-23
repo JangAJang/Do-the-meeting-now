@@ -22,13 +22,13 @@ public class Transfer {
     @ManyToOne(fetch = FetchType.LAZY)
     private Line depart;
 
+    @JoinColumn(name = "LINE_DEST")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Line dest;
+
     @JoinColumn(name = "STATION_START")
     @ManyToOne(fetch = FetchType.LAZY)
     private Station station;
-
-    @JoinColumn(name = "LINE_DESTINATION")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Line destination;
 
     @Column(name = "TRANSFER_DISTANCE")
     private Long distance;

@@ -94,4 +94,16 @@ public class ExceptionAdvice {
     public Response routeNotFoundException(){
         return Response.failure(404, "해당 노선을 찾을 수 없습니다. ");
     }
+
+    @ExceptionHandler(LineNotSameException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response lineNotSameException(){
+        return Response.failure(404, "출발역과 도착역의 호선 정보가 일치하지 않습니다. ");
+    }
+
+    @ExceptionHandler(RouteEmptyException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response routeEmptyException(){
+        return Response.failure(404, "등록된 경로가 없습니다. ");
+    }
 }

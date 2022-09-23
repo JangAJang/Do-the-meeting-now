@@ -22,11 +22,15 @@ public class Route {
     private Long time;
 
     @JoinColumn(name = "ROUTE_START")
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Station start;
 
     @JoinColumn(name = "ROUTE_END")
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Station end;
+
+    @JoinColumn(name = "LINE_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Line line;
 
 }

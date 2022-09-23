@@ -1,7 +1,9 @@
 package com.swprogramming.dothemeetingnow.service;
 
+import com.swprogramming.dothemeetingnow.Graph;
 import com.swprogramming.dothemeetingnow.dto.route.AddRouteRequestDto;
 import com.swprogramming.dothemeetingnow.dto.route.RouteResponseDto;
+import com.swprogramming.dothemeetingnow.dto.route.SearchRouteRequestDto;
 import com.swprogramming.dothemeetingnow.entity.*;
 import com.swprogramming.dothemeetingnow.exception.*;
 import com.swprogramming.dothemeetingnow.repository.LineRepository;
@@ -27,29 +29,38 @@ public class RouteService {
 
     @Transactional
     public RouteResponseDto addRoute(AddRouteRequestDto addRouteRequestDto){
+        validateMember();
         Route route = new Route();
-        setRoute(addRouteRequestDto, route);
+        Route reverse = new Route();
+        Line line = lineRepository.findByName(addRouteRequestDto.getLine_name()).orElseThrow(LineNotFoundException::new);
+        Station start = stationRepository.findByNameAndLine(addRouteRequestDto.getStart(), line).orElseThrow(StationNotFoundException::new);
+        Station end = stationRepository.findByNameAndLine(addRouteRequestDto.getEnd(), line).orElseThrow(StationNotFoundException::new);
+        route.setLine(line);
+        reverse.setLine(line);
+        if(addRouteRequestDto.getStart().equals("-1")) {
+            route.setStart(null);
+            reverse.setEnd(null);
+        }
+        else {
+            route.setStart(start);
+            reverse.setEnd(start);
+        }
+        if(addRouteRequestDto.getEnd().equals("-1")) {
+            route.setEnd(null);
+            reverse.setStart(null);
+        }
+        else {
+            route.setEnd(end);
+            reverse.setStart(end);
+        }
+        route.setTime(addRouteRequestDto.getMinute()*60 + addRouteRequestDto.getSecond());
+        reverse.setTime(addRouteRequestDto.getMinute()*60 + addRouteRequestDto.getSecond());
+        routeRepository.save(route);
+        routeRepository.save(reverse);
         return RouteResponseDto.toDto(route);
     }
 
-    @Transactional(readOnly = true)
-    public List<RouteResponseDto> getAllRouteOfLine(Long line_id){
-        Line line = lineRepository.findById(line_id).orElseThrow(LineNotFoundException::new);
-        List<RouteResponseDto> routeResponseDtos = new LinkedList<>();
-        List<Route> routes = routeRepository.findAllByLine(line);
-        if(routes.isEmpty()) throw new RouteNotFoundException();
-        routeResponseDtos.add(RouteResponseDto.toDto(routes.get(0)));
-        routes.remove(routes.get(0));
-        while(!routes.isEmpty()){
-            for(Route route : routes){
-                if(route.getStart().equals(routeResponseDtos.get(routeResponseDtos.size()-1))){
-                    routeResponseDtos.add(RouteResponseDto.toDto(route));
-                    routes.remove(route);
-                }
-            }
-        }
-        return routeResponseDtos;
-    }
+
 
     @Transactional(readOnly = true)
     public RouteResponseDto getRouteInfo(Long id){
@@ -57,20 +68,36 @@ public class RouteService {
         return RouteResponseDto.toDto(route);
     }
 
-    @Transactional
-    public RouteResponseDto updateRouteInfo(Long id, AddRouteRequestDto addRouteRequestDto){
-        Route route = getRoute(id);
-        validateMember();
-        setRoute(addRouteRequestDto, route);
-        return RouteResponseDto.toDto(route);
+    @Transactional(readOnly = true)
+    public RouteResponseDto getShortestRouteInSameLine(SearchRouteRequestDto searchRouteRequestDto){
+        Line line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
+        Station start = stationRepository.findByNameAndLine(searchRouteRequestDto.getStart_station(), line).orElseThrow(StationNotFoundException::new);
+        Station end = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), line).orElseThrow(StationNotFoundException::new);
+        List<Route> routes = routeRepository.findAllByLine(line);
+        if(routes.isEmpty()) throw new RouteEmptyException();
+        List<Station> stations = stationRepository.findAllByLine(line);
+        Graph graph = new Graph(stations.size());
+        for(int i=0; i<routes.size(); i++){
+            int a = stations.indexOf(routes.get(i).getStart());
+            int b = stations.indexOf(routes.get(i).getEnd());
+            Long weight = routes.get(i).getTime();
+            graph.input(a, b, weight);
+        }
+        Long[] distance = graph.dijkstra(stations.indexOf(start));
+        Long time = distance[stations.indexOf(end)];
+        RouteResponseDto routeResponseDto = RouteResponseDto.builder()
+                .line_name(line.getName())
+                .start(start.getName())
+                .end(end.getName())
+                .min(time/60)
+                .second(time%60)
+                .build();
+        return routeResponseDto;
     }
 
-    @Transactional
-    public String deleteRouteInfo(Long id){
-        Route route = getRoute(id);
-        validateMember();
-        routeRepository.delete(route);
-        return "삭제 완료";
+    @Transactional(readOnly = true)
+    public List<RouteResponseDto> getShortestRouteInDifferentLine(SearchRouteRequestDto searchRouteRequestDto){
+        
     }
 
     private Route getRoute(Long id){
@@ -82,19 +109,4 @@ public class RouteService {
         Member member = memberRepository.findByUsername(authentication.getName()).orElseThrow(MemberNotFoundException::new);
         if(member.getAuthority().equals(Authority.ROLE_USER)) throw new MemberNotAuthorized();
     }
-
-    private Route setRoute(AddRouteRequestDto addRouteRequestDto, Route route){
-        Station start = stationRepository.findByName(addRouteRequestDto.getStart()).orElseThrow(StationNotFoundException::new);
-        Station end = stationRepository.findByName(addRouteRequestDto.getEnd()).orElseThrow(StationNotFoundException::new);
-        Line line = lineRepository.findByName(addRouteRequestDto.getLine_name()).orElseThrow(LineNotFoundException::new);
-        Long min = addRouteRequestDto.getMinute();
-        Long sec = addRouteRequestDto.getSecond();
-        route.setLine(line);
-        route.setEnd(end);
-        route.setStart(start);
-        route.setTime(min*60 + sec);
-        routeRepository.save(route);
-        return route;
-    }
-
 }
