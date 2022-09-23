@@ -33,4 +33,8 @@ public class Route {
     @ManyToOne(fetch = FetchType.LAZY)
     private Line line;
 
+    @JoinColumn(name = "ROUTE_REVERSE")
+    @OneToOne(fetch = FetchType.LAZY)
+    private Route reverse;
+
 }

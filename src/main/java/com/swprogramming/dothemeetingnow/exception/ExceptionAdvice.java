@@ -106,4 +106,16 @@ public class ExceptionAdvice {
     public Response routeEmptyException(){
         return Response.failure(404, "등록된 경로가 없습니다. ");
     }
+
+    @ExceptionHandler(LineSameException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response lineSameException(){
+        return Response.failure(404, "같은 호선으로 환승할 수 없습니다. ");
+    }
+
+    @ExceptionHandler(TransferNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response transferNotFoundException(){
+        return Response.failure(404, "해당 환승정보를 찾을 수 없습니다. ");
+    }
 }

@@ -3,6 +3,8 @@ package com.swprogramming.dothemeetingnow.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
@@ -18,21 +20,19 @@ public class Transfer {
     @Column(name = "TRANSFER_ID")
     private Long id;
 
-    @JoinColumn(name = "LINE_START")
+    @JoinColumn(name = "FROM_ID")
     @ManyToOne(fetch = FetchType.LAZY)
-    private Line depart;
+    private Station from;
 
-    @JoinColumn(name = "LINE_DEST")
+    @JoinColumn(name = "TO_ID")
     @ManyToOne(fetch = FetchType.LAZY)
-    private Line dest;
-
-    @JoinColumn(name = "STATION_START")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Station station;
-
-    @Column(name = "TRANSFER_DISTANCE")
-    private Long distance;
+    private Station to;
 
     @Column(name = "TRASFER_TIME")
     private Long time;
+
+    @JoinColumn(name = "TRANSFER_REVERSE")
+    @OnDelete(action = OnDeleteAction.NO_ACTION)
+    @OneToOne(fetch = FetchType.LAZY)
+    private Transfer reverse;
 }
