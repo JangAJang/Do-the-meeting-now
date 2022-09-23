@@ -6,10 +6,7 @@ import com.swprogramming.dothemeetingnow.dto.route.RouteResponseDto;
 import com.swprogramming.dothemeetingnow.dto.route.SearchRouteRequestDto;
 import com.swprogramming.dothemeetingnow.entity.*;
 import com.swprogramming.dothemeetingnow.exception.*;
-import com.swprogramming.dothemeetingnow.repository.LineRepository;
-import com.swprogramming.dothemeetingnow.repository.MemberRepository;
-import com.swprogramming.dothemeetingnow.repository.RouteRepository;
-import com.swprogramming.dothemeetingnow.repository.StationRepository;
+import com.swprogramming.dothemeetingnow.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,32 +28,23 @@ public class RouteService {
     public RouteResponseDto addRoute(AddRouteRequestDto addRouteRequestDto){
         validateMember();
         Route route = new Route();
-        Route reverse = new Route();
         Line line = lineRepository.findByName(addRouteRequestDto.getLine_name()).orElseThrow(LineNotFoundException::new);
         Station start = stationRepository.findByNameAndLine(addRouteRequestDto.getStart(), line).orElseThrow(StationNotFoundException::new);
         Station end = stationRepository.findByNameAndLine(addRouteRequestDto.getEnd(), line).orElseThrow(StationNotFoundException::new);
         route.setLine(line);
-        reverse.setLine(line);
-        if(addRouteRequestDto.getStart().equals("-1")) {
-            route.setStart(null);
-            reverse.setEnd(null);
-        }
-        else {
-            route.setStart(start);
-            reverse.setEnd(start);
-        }
-        if(addRouteRequestDto.getEnd().equals("-1")) {
-            route.setEnd(null);
-            reverse.setStart(null);
-        }
-        else {
-            route.setEnd(end);
-            reverse.setStart(end);
-        }
+        if(addRouteRequestDto.getStart().equals("-1")) route.setStart(null);
+        else route.setStart(start);
+        if(addRouteRequestDto.getEnd().equals("-1")) route.setEnd(null);
+        else route.setEnd(end);
         route.setTime(addRouteRequestDto.getMinute()*60 + addRouteRequestDto.getSecond());
-        reverse.setTime(addRouteRequestDto.getMinute()*60 + addRouteRequestDto.getSecond());
+        route.setRouteStatus(RouteStatus.DIRECT);
+        if(route.getStart().getName().equals(route.getEnd().getName()) && route.getStart().getLine().equals(route.getEnd().getLine())){
+            throw new StationSameException();
+        }
+        else if(route.getStart().getName().equals(route.getEnd().getName()) && !route.getStart().getLine().equals(route.getEnd().getLine()){
+            route.setRouteStatus(RouteStatus.TRANSFER);
+        }
         routeRepository.save(route);
-        routeRepository.save(reverse);
         return RouteResponseDto.toDto(route);
     }
 
@@ -73,6 +61,7 @@ public class RouteService {
         Line line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
         Station start = stationRepository.findByNameAndLine(searchRouteRequestDto.getStart_station(), line).orElseThrow(StationNotFoundException::new);
         Station end = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), line).orElseThrow(StationNotFoundException::new);
+        if(start.equals(end)) throw new StationSameException();
         List<Route> routes = routeRepository.findAllByLine(line);
         if(routes.isEmpty()) throw new RouteEmptyException();
         List<Station> stations = stationRepository.findAllByLine(line);
@@ -95,8 +84,13 @@ public class RouteService {
         return routeResponseDto;
     }
 
+    //수정필요
     @Transactional(readOnly = true)
     public List<RouteResponseDto> getShortestRouteInDifferentLine(SearchRouteRequestDto searchRouteRequestDto){
+        Line from_line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
+        Line to_line = lineRepository.findByName(searchRouteRequestDto.getEnd_line()).orElseThrow(LineNotFoundException::new);
+        Station from = stationRepository.findByNameAndLine(searchRouteRequestDto.getStart_station(), from_line).orElseThrow(StationNotFoundException::new);
+        Station to = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), to_line).orElseThrow(StationNotFoundException::new);
         
     }
 

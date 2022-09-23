@@ -118,4 +118,10 @@ public class ExceptionAdvice {
     public Response transferNotFoundException(){
         return Response.failure(404, "해당 환승정보를 찾을 수 없습니다. ");
     }
+
+    @ExceptionHandler(StationSameException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response stationSameException(){
+        return Response.failure(404, "동일한 역으로는 경로를 구할 수 없습니다. ");
+    }
 }
