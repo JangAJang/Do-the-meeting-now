@@ -27,7 +27,7 @@ public class MemberService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
-    public RegisterResponseDto register(RegisterRequestDto registerRequestDto)throws Exception{
+    public RegisterResponseDto register(RegisterRequestDto registerRequestDto){
         if(memberRepository.findByUsername(registerRequestDto.getUsername()).isPresent()){
             throw new UsernameAlreadyExistException();
         }
@@ -59,7 +59,7 @@ public class MemberService {
 
 
     @Transactional
-    public TokenResponseDto signIn(LoginRequestDto loginRequestDto)throws Exception {
+    public TokenResponseDto signIn(LoginRequestDto loginRequestDto){
         Member member = memberRepository.findByUsername(loginRequestDto.getUsername()).orElseThrow(FailToLoginException::new);
         if(bCryptPasswordEncoder.encode(loginRequestDto.getPassword()).equals(member.getPassword())){
             throw new PasswordNotEqualException();
