@@ -5,7 +5,6 @@ import com.swprogramming.dothemeetingnow.dto.member.RegisterRequestDto;
 import com.swprogramming.dothemeetingnow.dto.member.ReissueRequestDto;
 import com.swprogramming.dothemeetingnow.response.Response;
 import com.swprogramming.dothemeetingnow.service.MemberService;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,21 +33,21 @@ public class MemberController {
 
     @ApiOperation(value = "토큰 재발행", notes = "리프레쉬 토큰을 재발행합니다. ")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/reissue")
+    @PostMapping("/reissue")
     public Response reissue(@RequestHeader ReissueRequestDto reissueRequestDto){
         return Response.success(memberService.reissue(reissueRequestDto));
     }
 
     @ApiOperation(value = "관리자 페이지", notes = "관지라 페이지입니다. ")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @GetMapping("/admin")
+    @GetMapping("/auth/admin")
     public Response admin(){
         return Response.success();
     }
 
     @ApiOperation(value = "매니저 페이지", notes = "매니저 페이지 입니다.")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @GetMapping("/manager")
+    @GetMapping("/auth/manager")
     public Response manager(){
         return Response.success();
     }
