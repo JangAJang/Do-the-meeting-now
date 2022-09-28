@@ -9,9 +9,11 @@ import com.swprogramming.dothemeetingnow.entity.Station;
 import com.swprogramming.dothemeetingnow.exception.MemberNotAuthorized;
 import com.swprogramming.dothemeetingnow.exception.MemberNotFoundException;
 import com.swprogramming.dothemeetingnow.exception.ReviewNotFoundException;
+import com.swprogramming.dothemeetingnow.exception.StationNotFoundException;
 import com.swprogramming.dothemeetingnow.repository.CategoryRepository;
 import com.swprogramming.dothemeetingnow.repository.MemberRepository;
 import com.swprogramming.dothemeetingnow.repository.ReviewRepository;
+import com.swprogramming.dothemeetingnow.repository.StationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,10 +30,12 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final CategoryRepository categoryRepository;
     private final MemberRepository memberRepository;
+    private final StationRepository stationRepository;
 
     @Transactional
-    public ReviewResponseDto writeReview(Station station, ReviewRequestDto reviewRequestDto){
+    public ReviewResponseDto writeReview(Long stationID, ReviewRequestDto reviewRequestDto){
         Member member = getMember();
+        Station station = stationRepository.findById(stationID).orElseThrow(StationNotFoundException::new);
         Category category = categoryRepository.findByName(reviewRequestDto.getCategory_name());
         Review review = Review.builder()
                 .category(category)
@@ -66,6 +70,18 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public List<ReviewResponseDto> getStationsReviews(Long stationId){
+        Station station = stationRepository.findById(stationId).orElseThrow(StationNotFoundException::new);
+        List<Review> reviews = reviewRepository.findAllByStation(station);
+        if(reviews.isEmpty()) throw new ReviewNotFoundException();
+        List<ReviewResponseDto> reviewResponseDtos = new LinkedList<>();
+        for(Review review : reviews){
+            reviewResponseDtos.add(ReviewResponseDto.toDto(review));
+        }
+        return reviewResponseDtos;
+    }
+
+    @Transactional(readOnly = true)
     public List<ReviewResponseDto> searchReviewsByContent(String content){
         List<ReviewResponseDto> reviewResponseDtos = getReviews();
         for(ReviewResponseDto review : reviewResponseDtos){
@@ -88,11 +104,17 @@ public class ReviewService {
         return ReviewResponseDto.toDto(review);
     }
 
-    @Transactional String deleteReview(Long id){
+    @Transactional
+    public String deleteReview(Long id){
         Review review = reviewRepository.findById(id).orElseThrow(ReviewNotFoundException::new);
         checkAuthorization(review);
         reviewRepository.delete(review);
         return "삭제 완료";
+    }
+
+    @Transactional(readOnly = true)
+    public ReviewResponseDto getReview(Long id){
+        return ReviewResponseDto.toDto(findReview(id));
     }
 
     private Review findReview(Long id){
