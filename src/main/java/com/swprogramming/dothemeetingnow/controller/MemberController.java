@@ -26,7 +26,7 @@ public class MemberController {
 
     @ApiOperation(value = "로그인", notes = "로그인 페이지 입니다.")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/sign-in")
+    @GetMapping("/login")
     public Response signin(@RequestBody LoginRequestDto loginRequestDto){
         return Response.success(memberService.signIn(loginRequestDto));
     }
