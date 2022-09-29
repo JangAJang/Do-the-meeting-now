@@ -58,13 +58,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
                 .and()
                 .authorizeRequests()
                 .antMatchers("/api/auth/manager/**").access("hasRole('ROLE_MANAGER')")
                 .antMatchers("/api/auth/admin/**").access("hasRole('ROLE_ADMIN')")
-                .antMatchers("api/login", "api/register").permitAll()
-                .antMatchers("api/auth/**").access("hasRole('ROLE_USER')")
+                .antMatchers("/api/login", "/api/register").permitAll()
+                .antMatchers("/api/review/**").access("hasRole('ROLE_USER') or hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")
+                .antMatchers("/api/station/**").access("hasRole('ROLE_USER') or hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")
+                .antMatchers("/api/line/**").access("hasRole('ROLE_USER') or hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")
+                .antMatchers("/api/route/**").access("hasRole('ROLE_USER') or hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")
                 .and()
                 .apply(new JwtSecurityConfig(tokenProvider));
     }

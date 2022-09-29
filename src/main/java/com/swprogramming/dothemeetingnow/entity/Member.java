@@ -41,4 +41,6 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     private Authority authority;
+
+
 }
