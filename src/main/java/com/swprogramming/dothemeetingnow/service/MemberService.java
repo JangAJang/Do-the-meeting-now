@@ -28,21 +28,7 @@ public class MemberService {
 
     @Transactional
     public RegisterResponseDto register(RegisterRequestDto registerRequestDto){
-        if(memberRepository.findByUsername(registerRequestDto.getUsername()).isPresent()){
-            throw new UsernameAlreadyExistException();
-        }
-        else if(memberRepository.findByNickname(registerRequestDto.getNickname()).isPresent()){
-            throw new NicknameAlreadyExistException();
-        }
-        else if(memberRepository.findByEmail(registerRequestDto.getEmail()).isPresent()){
-            throw new EmailAlreadyExistException();
-        }
-        else if(memberRepository.findByPhone(registerRequestDto.getPhone()).isPresent()){
-            throw new PhoneAlreadyExistException();
-        }
-        else if(!registerRequestDto.getPassword().equals(registerRequestDto.getPassword_check())){
-            throw new PasswordNotEqualException();
-        }
+        validateRegisterRequest(registerRequestDto);
         Member member = new Member();
         member.setUsername(registerRequestDto.getUsername());
         member.setNickname(registerRequestDto.getNickname());
@@ -53,7 +39,6 @@ public class MemberService {
         member.setEmail(registerRequestDto.getEmail());
         member.setPhone(registerRequestDto.getPhone());
         memberRepository.save(member);
-
         return RegisterResponseDto.toDto(member);
     }
 
@@ -64,18 +49,14 @@ public class MemberService {
         if(bCryptPasswordEncoder.encode(loginRequestDto.getPassword()).equals(member.getPassword())){
             throw new PasswordNotEqualException();
         }
-
         UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthentication();
-
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-
         RefreshToken refreshToken = RefreshToken.builder()
                 .key(authentication.getName())
                 .value(tokenDto.getRefreshToken())
                 .build();
         refreshTokenRepository.save(refreshToken);
-
         TokenResponseDto tokenResponseDto = new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
         return tokenResponseDto;
     }
@@ -101,4 +82,44 @@ public class MemberService {
         TokenResponseDto tokenResponseDto = new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
         return tokenResponseDto;
     }
+
+    private void validateRegisterRequest(RegisterRequestDto registerRequestDto){
+        validateNickname(registerRequestDto);
+        validateEmail(registerRequestDto);
+        validatePassword(registerRequestDto);
+        validatePhone(registerRequestDto);
+        validateUsername(registerRequestDto);
+    }
+
+    private void validateUsername(RegisterRequestDto registerRequestDto){
+        if(memberRepository.findByUsername(registerRequestDto.getUsername()).isPresent()){
+            throw new UsernameAlreadyExistException();
+        }
+    }
+
+    private void validateNickname(RegisterRequestDto registerRequestDto){
+        if(memberRepository.findByNickname(registerRequestDto.getNickname()).isPresent()){
+        throw new NicknameAlreadyExistException();
+        }
+    }
+
+    private void validateEmail(RegisterRequestDto registerRequestDto){
+        if(memberRepository.findByEmail(registerRequestDto.getEmail()).isPresent()){
+        throw new EmailAlreadyExistException();
+        }
+    }
+
+    private void validatePhone(RegisterRequestDto registerRequestDto){
+        if(memberRepository.findByPhone(registerRequestDto.getPhone()).isPresent()){
+            throw new PhoneAlreadyExistException();
+        }
+    }
+
+    private void validatePassword(RegisterRequestDto registerRequestDto){
+        if(!registerRequestDto.getPassword().equals(registerRequestDto.getPassword_check())){
+            throw new PasswordNotEqualException();
+        }
+    }
+
+
 }
