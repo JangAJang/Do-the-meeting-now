@@ -6,10 +6,7 @@ import com.swprogramming.dothemeetingnow.entity.Category;
 import com.swprogramming.dothemeetingnow.entity.Member;
 import com.swprogramming.dothemeetingnow.entity.Review;
 import com.swprogramming.dothemeetingnow.entity.Station;
-import com.swprogramming.dothemeetingnow.exception.MemberNotAuthorized;
-import com.swprogramming.dothemeetingnow.exception.MemberNotFoundException;
-import com.swprogramming.dothemeetingnow.exception.ReviewNotFoundException;
-import com.swprogramming.dothemeetingnow.exception.StationNotFoundException;
+import com.swprogramming.dothemeetingnow.exception.*;
 import com.swprogramming.dothemeetingnow.repository.CategoryRepository;
 import com.swprogramming.dothemeetingnow.repository.MemberRepository;
 import com.swprogramming.dothemeetingnow.repository.ReviewRepository;
@@ -20,7 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -32,81 +29,53 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final StationRepository stationRepository;
 
-    @Transactional
-    public ReviewResponseDto writeReview(Long stationID, ReviewRequestDto reviewRequestDto){
-        Member member = getMember();
-        Station station = stationRepository.findById(stationID).orElseThrow(StationNotFoundException::new);
-        Category category = categoryRepository.findByName(reviewRequestDto.getCategory_name());
-        Review review = Review.builder()
-                .category(category)
-                .content(reviewRequestDto.getContent())
-                .rate(reviewRequestDto.getRate())
-                .station(station)
-                .member(member)
-                .build();
-        reviewRepository.save(review);
-        return ReviewResponseDto.toDto(review);
-    }
-
     @Transactional(readOnly = true)
     public List<ReviewResponseDto> getReviews(){
-        List<Review> reviews = reviewRepository.findAll();
-        List<ReviewResponseDto> reviewResponseDtos = new LinkedList<>();
-        for(Review review : reviews){
-            reviewResponseDtos.add(ReviewResponseDto.toDto(review));
-        }
-        return reviewResponseDtos;
+        List<Review> reviews = getAllReviews();
+        return changeEntityToDto(reviews);
     }
 
     @Transactional(readOnly = true)
-    public List<ReviewResponseDto> searchReviewsByCategory(String category_name){
-        List<ReviewResponseDto> reviewResponseDtos = getReviews();
-        for(ReviewResponseDto reviewResponseDto: reviewResponseDtos){
-            if(!reviewResponseDto.getCategory_name().contains(category_name)){
-                reviewResponseDtos.remove(reviewResponseDto);
-            }
-        }
-        return reviewResponseDtos;
-    }
-
-    @Transactional(readOnly = true)
-    public List<ReviewResponseDto> getStationsReviews(Long stationId){
-        Station station = stationRepository.findById(stationId).orElseThrow(StationNotFoundException::new);
-        List<Review> reviews = reviewRepository.findAllByStation(station);
+    public List<ReviewResponseDto> searchReviewByStation(Long stationId){
+        List<Review> reviews = reviewRepository.findAllByStation(getStationById(stationId));
         if(reviews.isEmpty()) throw new ReviewNotFoundException();
-        List<ReviewResponseDto> reviewResponseDtos = new LinkedList<>();
-        for(Review review : reviews){
-            reviewResponseDtos.add(ReviewResponseDto.toDto(review));
-        }
-        return reviewResponseDtos;
+        return changeEntityToDto(reviews);
     }
 
     @Transactional(readOnly = true)
     public List<ReviewResponseDto> searchReviewsByContent(String content){
-        List<ReviewResponseDto> reviewResponseDtos = getReviews();
-        for(ReviewResponseDto review : reviewResponseDtos){
-            if(!review.getContent().contains(content)){
-                reviewResponseDtos.remove(review);
-            }
-        }
-        return reviewResponseDtos;
+        List<Review> reviews = getAllReviews();
+        reviews.removeIf(review -> !review.getContent().contains(content));
+        return changeEntityToDto(reviews);
     }
 
+    @Transactional
+    public ReviewResponseDto writeReview(Long stationID, ReviewRequestDto reviewRequestDto){
+        Review review = setReview(new Review(), reviewRequestDto);
+        review.setStation(getStationById(stationID));
+        reviewRepository.save(review);
+        return ReviewResponseDto.toDto(review);
+    }
+
+    private Review setReview(Review review, ReviewRequestDto reviewRequestDto){
+        review.setCategory(getCategory(reviewRequestDto.getCategory_name()));
+        review.setRate(reviewRequestDto.getRate());
+        review.setContent(reviewRequestDto.getContent());
+        review.setMember(getMember());
+        return review;
+    }
     @Transactional
     public ReviewResponseDto updateReview(ReviewRequestDto reviewRequestDto, Long id){
         Review review = findReview(id);
         checkAuthorization(review);
-        Category category = categoryRepository.findByName(reviewRequestDto.getCategory_name());
-        review.setCategory(category);
-        review.setRate(reviewRequestDto.getRate());
-        review.setContent(reviewRequestDto.getContent());
+        setReview(review, reviewRequestDto);
         reviewRepository.save(review);
         return ReviewResponseDto.toDto(review);
     }
 
     @Transactional
     public String deleteReview(Long id){
-        Review review = reviewRepository.findById(id).orElseThrow(ReviewNotFoundException::new);
+        Review review = findReview(id);
         checkAuthorization(review);
         reviewRepository.delete(review);
         return "삭제 완료";
@@ -132,4 +101,27 @@ public class ReviewService {
             throw new MemberNotAuthorized();
         }
     }
+
+    private List<Review> getAllReviews(){
+        List<Review> reviews = reviewRepository.findAll();
+        if(reviews.isEmpty()) throw new ReviewNotFoundException();
+        return reviews;
+    }
+
+    private List<ReviewResponseDto> changeEntityToDto(List<Review> reviews){
+        List<ReviewResponseDto> reviewResponseDtos = new ArrayList<>();
+        for(Review review : reviews){
+            reviewResponseDtos.add(ReviewResponseDto.toDto(review));
+        }
+        return reviewResponseDtos;
+    }
+
+    private Station getStationById(Long id){
+        return stationRepository.findById(id).orElseThrow(StationNotFoundException::new);
+    }
+
+    private Category getCategory(String name){
+        return categoryRepository.findByName(name).orElseThrow(CategoryNotFoundException::new);
+    }
+
 }
