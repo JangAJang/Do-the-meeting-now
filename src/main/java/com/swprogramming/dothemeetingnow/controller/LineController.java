@@ -19,7 +19,7 @@ public class LineController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/")
     public Response getAllLine(){
-        return Response.success(lineService.getAllLines());
+        return Response.success(lineService.searchAllLineDto());
     }
 
     @ApiOperation(value = "", notes = "")

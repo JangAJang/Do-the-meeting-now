@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,26 +35,21 @@ public class LineService {
     }
 
     @Transactional(readOnly = true)
-    public List<LineDto> getAllLines(){
-        return getLine();
+    public List<LineDto> searchAllLineDto(){
+        return changeEntityToDto(getAllLineEntity());
     }
 
     @Transactional(readOnly = true)
     public List<LineDto> searchAllLineByName(String name){
-        List<LineDto> lineDtos = getLine();
-        for(LineDto lineDto : lineDtos){
-            if(!lineDto.getLine_name().equals(name)){
-                lineDtos.remove(lineDto);
-            }
-        }
-        if(lineDtos.isEmpty()) throw new LineNotFoundException();
-        return lineDtos;
+        List<Line> lines = getAllLineEntity();
+        filterByName(lines, name);
+        return changeEntityToDto(lines);
     }
 
     @Transactional
     public LineDto updateLine(LineDto lineDto, Long id){
+        validateMember();
         Line line = getLine(id);
-        validateMember(line);
         line.setName(lineDto.getLine_name());
         lineRepository.save(line);
         return LineDto.toDto(line);
@@ -61,19 +57,23 @@ public class LineService {
 
     @Transactional
     public String deleteLine(Long id){
+        validateMember();
         Line line = getLine(id);
-        validateMember(line);
         lineRepository.delete(line);
         return "삭제완료";
     }
 
-    private List<LineDto> getLine(){
+    private List<Line> getAllLineEntity(){
         List<Line> lines = lineRepository.findAll();
-        List<LineDto> lineDtos = new LinkedList<LineDto>();
+        if(lines.isEmpty()) throw new LineNotFoundException();
+        return lines;
+    }
+
+    private List<LineDto> changeEntityToDto(List<Line> lines){
+        List<LineDto> lineDtos = new ArrayList<>();
         for(Line line : lines){
             lineDtos.add(LineDto.toDto(line));
         }
-        if(lineDtos.isEmpty()) throw new LineNotFoundException();
         return lineDtos;
     }
 
@@ -82,9 +82,15 @@ public class LineService {
         return line;
     }
 
-    private void validateMember(Line line){
+    private void validateMember(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Member member = memberRepository.findByUsername(authentication.getName()).orElseThrow(MemberNotFoundException::new);
         if(member.getAuthority().equals(Authority.ROLE_USER)) throw new MemberNotAuthorized();
+    }
+
+    private void filterByName(List<Line> lines, String name){
+        for(Line line : lines){
+            if(!line.getName().equals(name)) lines.remove(line);
+        }
     }
 }
