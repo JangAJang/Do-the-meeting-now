@@ -20,7 +20,7 @@ public class StationController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/")
     public Response getAllStation(){
-        return Response.success(stationService.getAllStations());
+        return Response.success(stationService.searchAllStation());
     }
 
     @ApiOperation(value = "", notes = "")
