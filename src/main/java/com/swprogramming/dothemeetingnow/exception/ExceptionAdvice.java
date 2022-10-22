@@ -124,4 +124,12 @@ public class ExceptionAdvice {
     public Response stationSameException(){
         return Response.failure(404, "동일한 역으로는 경로를 구할 수 없습니다. ");
     }
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Response categoryNotFoundExceptino(){
+        return Response.failure(404, "카테고리를 찾을 수 없습니다. ");
+    }
+
+
 }
