@@ -46,28 +46,17 @@ public class MemberService {
     @Transactional
     public TokenResponseDto signIn(LoginRequestDto loginRequestDto){
         validateSignInRequest(loginRequestDto);
-        UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthentication();
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-        RefreshToken refreshToken = RefreshToken.builder()
-                .key(authentication.getName())
-                .value(tokenDto.getRefreshToken())
-                .build();
-        refreshTokenRepository.save(refreshToken);
+        TokenDto tokenDto = getTokenDto(loginRequestDto);
         return new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
     }
 
     @Transactional
     public TokenResponseDto reissue(ReissueRequestDto req) {
         validateRefreshToken(req);
-        Authentication authentication = tokenProvider.getAuthentication(req.getAccessToken());
-        RefreshToken refreshToken = refreshTokenRepository.findByKey(authentication.getName())
+        RefreshToken refreshToken = refreshTokenRepository.findByKey(getAuthentication(req).getName())
                 .orElseThrow(() -> new RuntimeException("로그아웃 된 사용자입니다."));
-        if (!refreshToken.getValue().equals(req.getRefreshToken())) {
-            throw new RuntimeException("토큰의 유저 정보가 일치하지 않습니다.");
-        }
-
-        TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
+        validateTokenInfo(refreshToken,req);
+        TokenDto tokenDto = tokenProvider.generateTokenDto(getAuthentication(req));
         RefreshToken newRefreshToken = refreshToken.updateValue(tokenDto.getRefreshToken());
         refreshTokenRepository.save(newRefreshToken);
         return new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
@@ -133,6 +122,24 @@ public class MemberService {
         }
     }
 
+    private TokenDto getTokenDto(LoginRequestDto loginRequestDto){
+        UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthentication();
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .key(authentication.getName())
+                .value(tokenDto.getRefreshToken())
+                .build();
+        refreshTokenRepository.save(refreshToken);
+        return tokenDto;
+    }
 
+    private Authentication getAuthentication(ReissueRequestDto req){
+        return tokenProvider.getAuthentication(req.getAccessToken());
+    }
 
+    private void validateTokenInfo(RefreshToken refreshToken, ReissueRequestDto req){
+        if (!refreshToken.getValue().equals(req.getRefreshToken())) {
+            throw new RuntimeException("토큰의 유저 정보가 일치하지 않습니다.");
+        }}
 }
