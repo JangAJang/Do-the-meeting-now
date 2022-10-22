@@ -17,29 +17,29 @@ public class ReviewController {
 
     @ApiOperation(value = "", notes = "")
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/ofStation/{id}")
-    public Response writeReview(@RequestParam("${id}") Long id, @RequestBody ReviewRequestDto reviewRequestDto){
+    @PostMapping("/ofStation/")
+    public Response writeReview(@RequestParam Long id, @RequestBody ReviewRequestDto reviewRequestDto){
         return Response.success(reviewService.writeReview(id, reviewRequestDto));
     }
 
     @ApiOperation(value = "", notes = "")
     @ResponseStatus(HttpStatus.OK)
-    @PutMapping("/{id}")
-    public Response updateReview(@RequestParam("${id}") Long id, @RequestBody ReviewRequestDto reviewRequestDto){
+    @PutMapping("/")
+    public Response updateReview(@RequestParam Long id, @RequestBody ReviewRequestDto reviewRequestDto){
         return Response.success(reviewService.updateReview(reviewRequestDto, id));
     }
 
     @ApiOperation(value = "", notes = "")
     @ResponseStatus(HttpStatus.OK)
-    @DeleteMapping("/{id}")
-    public Response deleteReview(@RequestParam("${id}") Long id){
+    @DeleteMapping("/")
+    public Response deleteReview(@RequestParam Long id){
         return Response.success(reviewService.deleteReview(id));
     }
 
     @ApiOperation(value = "", notes = "")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/{id}")
-    public Response showReview(@RequestParam("${id}")Long id){
+    @GetMapping("/")
+    public Response showReview(@RequestParam Long id){
         return Response.success(reviewService.getReview(id));
     }
 
@@ -52,9 +52,9 @@ public class ReviewController {
 
     @ApiOperation(value = "", notes = "")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/ofStation/{id}")
-    public Response getReviewOfStation(@RequestParam("${id}")Long id){
-        return Response.success(reviewService.getStationsReviews(id));
+    @GetMapping("/ofStation/")
+    public Response getReviewOfStation(@RequestParam Long id){
+        return Response.success(reviewService.searchReviewByStation(id));
     }
 
 
