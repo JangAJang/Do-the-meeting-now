@@ -45,10 +45,7 @@ public class MemberService {
 
     @Transactional
     public TokenResponseDto signIn(LoginRequestDto loginRequestDto){
-        Member member = memberRepository.findByUsername(loginRequestDto.getUsername()).orElseThrow(FailToLoginException::new);
-        if(bCryptPasswordEncoder.encode(loginRequestDto.getPassword()).equals(member.getPassword())){
-            throw new PasswordNotEqualException();
-        }
+        validateSignInRequest(loginRequestDto);
         UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthentication();
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
@@ -57,20 +54,15 @@ public class MemberService {
                 .value(tokenDto.getRefreshToken())
                 .build();
         refreshTokenRepository.save(refreshToken);
-        TokenResponseDto tokenResponseDto = new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
-        return tokenResponseDto;
+        return new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
     }
 
     @Transactional
     public TokenResponseDto reissue(ReissueRequestDto req) {
-        if (!tokenProvider.validateToken(req.getRefreshToken())) {
-            throw new RuntimeException("Refresh Token 이 유효하지 않습니다.");
-        }
-
+        validateRefreshToken(req);
         Authentication authentication = tokenProvider.getAuthentication(req.getAccessToken());
         RefreshToken refreshToken = refreshTokenRepository.findByKey(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("로그아웃 된 사용자입니다."));
-
         if (!refreshToken.getValue().equals(req.getRefreshToken())) {
             throw new RuntimeException("토큰의 유저 정보가 일치하지 않습니다.");
         }
@@ -78,9 +70,7 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
         RefreshToken newRefreshToken = refreshToken.updateValue(tokenDto.getRefreshToken());
         refreshTokenRepository.save(newRefreshToken);
-
-        TokenResponseDto tokenResponseDto = new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
-        return tokenResponseDto;
+        return new TokenResponseDto(tokenDto.getAccessToken(), tokenDto.getRefreshToken());
     }
 
     private void validateRegisterRequest(RegisterRequestDto registerRequestDto){
@@ -120,6 +110,29 @@ public class MemberService {
             throw new PasswordNotEqualException();
         }
     }
+
+    private Member validateSignInRequest(LoginRequestDto loginRequestDto){
+        Member member = validateMemberExistence(loginRequestDto);
+        validatePasswordCorrection(loginRequestDto, member);
+        return member;
+    }
+
+    private Member validateMemberExistence(LoginRequestDto loginRequestDto){
+        return memberRepository.findByUsername(loginRequestDto.getUsername()).orElseThrow(FailToLoginException::new);
+    }
+
+    private void validatePasswordCorrection(LoginRequestDto loginRequestDto, Member member){
+        if(bCryptPasswordEncoder.encode(loginRequestDto.getPassword()).equals(member.getPassword())){
+            throw new PasswordNotEqualException();
+        }
+    }
+
+    private void validateRefreshToken(ReissueRequestDto req){
+        if (!tokenProvider.validateToken(req.getRefreshToken())) {
+            throw new RuntimeException("Refresh Token 이 유효하지 않습니다.");
+        }
+    }
+
 
 
 }
