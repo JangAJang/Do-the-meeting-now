@@ -59,10 +59,10 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReviewResponseDto> searchReviewsByCategory(Long category_name){
+    public List<ReviewResponseDto> searchReviewsByCategory(String category_name){
         List<ReviewResponseDto> reviewResponseDtos = getReviews();
         for(ReviewResponseDto reviewResponseDto: reviewResponseDtos){
-            if(!reviewResponseDto.getCategory_name().equals(category_name)){
+            if(!reviewResponseDto.getCategory_name().contains(category_name)){
                 reviewResponseDtos.remove(reviewResponseDto);
             }
         }
@@ -118,14 +118,12 @@ public class ReviewService {
     }
 
     private Review findReview(Long id){
-        Review review = reviewRepository.findById(id).orElseThrow(ReviewNotFoundException::new);
-        return review;
+        return reviewRepository.findById(id).orElseThrow(ReviewNotFoundException::new);
     }
 
     private Member getMember(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = memberRepository.findByUsername(authentication.getName()).orElseThrow(MemberNotFoundException::new);
-        return member;
+        return memberRepository.findByUsername(authentication.getName()).orElseThrow(MemberNotFoundException::new);
     }
 
     private void checkAuthorization(Review review){
