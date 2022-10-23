@@ -42,13 +42,6 @@ public class RouteController {
 
     @ApiOperation(value = "", notes = "")
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/patchAll")
-    public Response patch(){
-        return Response.success(routeService.patch());
-    }
-
-    @ApiOperation(value = "", notes = "")
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/searchRoute")
     public Response getRoute(@RequestBody SearchRouteRequestDto searchRouteRequestDto){
         return Response.success(routeService.getShortestRoute(searchRouteRequestDto));

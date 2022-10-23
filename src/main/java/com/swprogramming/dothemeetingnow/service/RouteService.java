@@ -52,50 +52,6 @@ public class RouteService {
         return RouteResponseDto.toDto(route);
     }
 
-    @Transactional
-    public String patch(){
-        List<Route> routes = routeRepository.findAll();
-        List<Station> stations = stationRepository.findAll();
-        Long[][] val = new Long[stations.size()][stations.size()];
-        for(int i=0; i<stations.size(); i++){
-            Arrays.fill(val[i], Long.MAX_VALUE);
-        }
-        for(Route route: routes){
-            int start = stations.indexOf(route.getStart());
-            int end = stations.indexOf(route.getEnd());
-            val[start][end] = route.getTime();
-            val[end][start] = route.getTime();
-        }
-        routeRepository.deleteAll();
-        for(int k=0; k<stations.size(); k++){
-            for(int i=0; i<stations.size(); i++){
-                for(int j=0; j<stations.size();j++){
-                    if(val[i][j] > val[i][k] + val[k][j]){
-                        val[i][j] = val[i][k] + val[k][j];
-                    }
-                }
-            }
-        }
-        for(int i=0; i< stations.size(); i++){
-            for(int j=0; j<stations.size(); j++){
-                Route route = new Route();
-                route.setStart(stations.get(i));
-                route.setEnd(stations.get(j));
-                route.setTime(val[i][j]);
-                if(route.getStart().getLine().equals(route.getEnd().getLine())) {
-                    route.setLine(route.getStart().getLine());
-                    route.setRouteStatus(RouteStatus.DIRECT);
-                }
-                else{
-                    route.setLine(null);
-                    route.setRouteStatus(RouteStatus.TRANSFER);
-                }
-                routeRepository.save(route);
-            }
-        }
-        return "패치 완료";
-    }
-
     @Transactional(readOnly = true)
     public RouteResponseDto getShortestRoute(SearchRouteRequestDto searchRouteRequestDto){
         Line from_line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
@@ -137,8 +93,6 @@ public class RouteService {
     }
 
     private Route getShortestRouteInDifferentLine(Station from, Station to){
-        Line from_line = from.getLine();
-        Line to_line = to.getLine();
         List<Route> routes = routeRepository.findAll();
         if(routes.isEmpty()) throw new RouteEmptyException();
         List<Station> stations = stationRepository.findAll();
