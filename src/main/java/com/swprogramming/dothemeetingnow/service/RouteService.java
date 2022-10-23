@@ -54,25 +54,38 @@ public class RouteService {
 
     @Transactional(readOnly = true)
     public RouteResponseDto getShortestRoute(SearchRouteRequestDto searchRouteRequestDto){
-        Line from_line = lineRepository.findByName(searchRouteRequestDto.getStart_line()).orElseThrow(LineNotFoundException::new);
-        Line to_line = lineRepository.findByName(searchRouteRequestDto.getEnd_line()).orElseThrow(LineNotFoundException::new);
-        Station start = stationRepository.findByNameAndLine(searchRouteRequestDto.getStart_station(), from_line).orElseThrow(StationNotFoundException::new);
-        Station end = stationRepository.findByNameAndLine(searchRouteRequestDto.getEnd_station(), to_line).orElseThrow(StationNotFoundException::new);
-        Route route;
+        Line from_line = getLineByName(searchRouteRequestDto.getStart_line());
+        Line to_line = getLineByName(searchRouteRequestDto.getEnd_line());
+        Station start = getStationByNameAndLine(searchRouteRequestDto.getStart_station(), from_line);
+        Station end = getStationByNameAndLine(searchRouteRequestDto.getEnd_station(), to_line);
         if(from_line.equals(to_line)){
-            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInSameLine(start, end));
+             return RouteResponseDto.toDto(routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInSameLine(start, end)));
         }
-        else {
-            route = routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInDifferentLine(start, end));
-        }
-        return RouteResponseDto.toDto(route);
+        return RouteResponseDto.toDto(routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInDifferentLine(start, end)));
+    }
+
+    private Line getLineByName(String start){
+        return lineRepository.findByName(start).orElseThrow(LineNotFoundException::new);
+    }
+
+    private Station getStationByNameAndLine(String name, Line line){
+        return stationRepository.findByNameAndLine(name, line).orElseThrow(StationNotFoundException::new);
+    }
+
+    private void validateRoutes(List<Route> routes){
+        if(routes.isEmpty()) throw new RouteEmptyException();
+    }
+
+    private void validateStations(List<Station>stations){
+        if(stations.isEmpty()) throw new StationNotFoundException();
     }
 
     private Route getShortestRouteInSameLine(Station start, Station end){
         Line line = start.getLine();
         List<Route> routes = routeRepository.findAllByLine(line);
-        if(routes.isEmpty()) throw new RouteEmptyException();
+        validateRoutes(routes);
         List<Station> stations = stationRepository.findAllByLine(line);
+        validateStations(stations);
         Graph graph = new Graph(stations.size());
         for(int i=0; i<routes.size(); i++){
             int a = stations.indexOf(routes.get(i).getStart());
