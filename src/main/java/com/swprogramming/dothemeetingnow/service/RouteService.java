@@ -58,9 +58,15 @@ public class RouteService {
         Line to_line = getLineByName(searchRouteRequestDto.getEnd_line());
         Station start = getStationByNameAndLine(searchRouteRequestDto.getStart_station(), from_line);
         Station end = getStationByNameAndLine(searchRouteRequestDto.getEnd_station(), to_line);
-        if(from_line.equals(to_line)){
-             return RouteResponseDto.toDto(routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInSameLine(start, end)));
-        }
+        if(from_line.equals(to_line)) return getRouteInSameLine(start, end);
+        return getRouteInDifferentLine(start, end);
+    }
+
+    private RouteResponseDto getRouteInSameLine(Station start, Station end){
+        return RouteResponseDto.toDto(routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInSameLine(start, end)));
+    }
+
+    private RouteResponseDto getRouteInDifferentLine(Station start, Station end){
         return RouteResponseDto.toDto(routeRepository.findByStartAndEnd(start, end).orElse(getShortestRouteInDifferentLine(start, end)));
     }
 
