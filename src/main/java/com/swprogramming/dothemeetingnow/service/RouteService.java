@@ -93,10 +93,10 @@ public class RouteService {
         List<Station> stations = stationRepository.findAllByLine(line);
         validateStations(stations);
         Graph graph = new Graph(stations.size());
-        for(int i=0; i<routes.size(); i++){
-            int a = stations.indexOf(routes.get(i).getStart());
-            int b = stations.indexOf(routes.get(i).getEnd());
-            Long weight = routes.get(i).getTime();
+        for (Route value : routes) {
+            int a = stations.indexOf(value.getStart());
+            int b = stations.indexOf(value.getEnd());
+            Long weight = value.getTime();
             graph.input(a, b, weight);
         }
         Long[] distance = graph.dijkstra(stations.indexOf(start));
@@ -116,10 +116,10 @@ public class RouteService {
         if(routes.isEmpty()) throw new RouteEmptyException();
         List<Station> stations = stationRepository.findAll();
         Graph graph = new Graph(stations.size());
-        for(int i=0; i<routes.size(); i++){
-            int a = stations.indexOf(routes.get(i).getStart());
-            int b = stations.indexOf(routes.get(i).getEnd());
-            Long weight = routes.get(i).getTime();
+        for (Route value : routes) {
+            int a = stations.indexOf(value.getStart());
+            int b = stations.indexOf(value.getEnd());
+            Long weight = value.getTime();
             graph.input(a, b, weight);
         }
         Long[] distance = graph.dijkstra(stations.indexOf(from));
@@ -144,10 +144,10 @@ public class RouteService {
         List<Route> routes = routeRepository.findAll();
         List<Station> stations = stationRepository.findAll();
         Graph graph = new Graph(stations.size());
-        for(int i=0; i<routes.size(); i++){
-            int a = stations.indexOf(routes.get(i).getStart());
-            int b = stations.indexOf(routes.get(i).getEnd());
-            Long weight = routes.get(i).getTime();
+        for (Route route : routes) {
+            int a = stations.indexOf(route.getStart());
+            int b = stations.indexOf(route.getEnd());
+            Long weight = route.getTime();
             graph.input(a, b, weight);
         }
         Long[][] distances = new Long[starts.size()][stations.size()];
@@ -175,8 +175,8 @@ public class RouteService {
             }
         }
         List<RouteResponseDto> result = new LinkedList<>();
-        for(int i=0; i<starts.size(); i++){
-            result.add(RouteResponseDto.toDto(getShortestRouteInDifferentLine(starts.get(i), stations.get(index))));
+        for (Station start : starts) {
+            result.add(RouteResponseDto.toDto(getShortestRouteInDifferentLine(start, stations.get(index))));
         }
         return result;
     }
