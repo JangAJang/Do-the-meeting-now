@@ -1,10 +1,8 @@
 package com.swprogramming.dothemeetingnow.repository;
 
-import com.swprogramming.dothemeetingnow.entity.Review;
-import com.swprogramming.dothemeetingnow.entity.Station;
+import com.swprogramming.dothemeetingnow.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 

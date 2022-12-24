@@ -1,16 +1,9 @@
 package com.swprogramming.dothemeetingnow.service;
 
-import com.swprogramming.dothemeetingnow.dto.review.ReviewRequestDto;
-import com.swprogramming.dothemeetingnow.dto.review.ReviewResponseDto;
-import com.swprogramming.dothemeetingnow.entity.Category;
-import com.swprogramming.dothemeetingnow.entity.Member;
-import com.swprogramming.dothemeetingnow.entity.Review;
-import com.swprogramming.dothemeetingnow.entity.Station;
+import com.swprogramming.dothemeetingnow.dto.review.*;
+import com.swprogramming.dothemeetingnow.entity.*;
 import com.swprogramming.dothemeetingnow.exception.*;
-import com.swprogramming.dothemeetingnow.repository.CategoryRepository;
-import com.swprogramming.dothemeetingnow.repository.MemberRepository;
-import com.swprogramming.dothemeetingnow.repository.ReviewRepository;
-import com.swprogramming.dothemeetingnow.repository.StationRepository;
+import com.swprogramming.dothemeetingnow.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,9 +30,7 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public List<ReviewResponseDto> searchReviewByStation(Long stationId){
-        List<Review> reviews = reviewRepository.findAllByStation(getStationById(stationId));
-        if(reviews.isEmpty()) throw new ReviewNotFoundException();
-        return changeEntityToDto(reviews);
+        return reviewRepository.findAllByStation(getStationById(stationId));
     }
 
     @Transactional(readOnly = true)

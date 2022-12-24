@@ -1,6 +1,6 @@
 package com.swprogramming.dothemeetingnow.dto.station;
 
-import com.swprogramming.dothemeetingnow.entity.Station;
+import com.swprogramming.dothemeetingnow.entity.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

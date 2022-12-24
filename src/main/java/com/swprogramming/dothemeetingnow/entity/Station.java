@@ -1,6 +1,5 @@
 package com.swprogramming.dothemeetingnow.entity;
 
-import com.swprogramming.dothemeetingnow.dto.station.AddStationRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,12 +9,12 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
-@Entity
 @Data
+@Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @Table(name = "STATION")
+@Builder
 public class Station {
 
     @Id
@@ -30,10 +29,4 @@ public class Station {
 
     @Column(name = "STATION_NAME", nullable = false)
     private String name;
-
-    public Station makeNewStation(AddStationRequestDto addStationRequestDto, Line line){
-        return Station.builder()
-                .name(addStationRequestDto.getName())
-                .line(line).build();
-    }
 }
