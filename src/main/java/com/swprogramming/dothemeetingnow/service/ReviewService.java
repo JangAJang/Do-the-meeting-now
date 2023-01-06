@@ -30,7 +30,8 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public List<ReviewResponseDto> searchReviewByStation(Long stationId){
-        return reviewRepository.findAllByStation(getStationById(stationId));
+//        return reviewRepository.findAllByStation(getStationById(stationId));
+        return new ArrayList<>();
     }
 
     @Transactional(readOnly = true)
